@@ -1,33 +1,31 @@
-
 typedef struct State {
-    float x, y, z;
-    float phi, theta, psi;
-    float u, v, w;
-    float p, q, r;
+    float position;
+    float velocity;
+    int tick;
+    float delta_time;
 } State;
 
 typedef struct Control {
-    float aileron;
-    float elevator;
-    float rudder;
-    float throttle;
+    float force;
 } Control;
 
-void clamp(float* target, float min, float max) {
-    if (*target < min) {
-        *target = min;
-    }
-    if (*target > max) {
-        *target = max;
-    }
-}
+static float integral = 0.;
 
 Control controller(const State *state) {
-    Control controller = {
-        .aileron = 0.,
-        .elevator = -0.1,
-        .rudder = 0.,
-        .throttle = 0.5,
-    };
+    Control controller = {.force = 0};
+
+    float kp = 7.;
+    float kd = 3.;
+    float ki = 0.5;
+
+    if (state->tick % 100 == 0) {
+        integral = 0;
+    }
+    integral += state->position * 0.01;
+
+    controller.force += -kp * state->position;
+    controller.force += -kd * state->velocity;
+    controller.force += -ki * integral;
+
     return controller;
 }
