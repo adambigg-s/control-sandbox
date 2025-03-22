@@ -1,3 +1,4 @@
+mod shaders;
 mod simulation;
 
 use std::os::raw::c_void;
@@ -59,6 +60,7 @@ struct GlobalState {
     simulation: Simulation,
     pipeline: gfx::Pipeline,
     bindings: gfx::Bindings,
+    pass_action: gfx::PassAction,
 }
 
 impl GlobalState {
@@ -71,6 +73,37 @@ impl GlobalState {
             },
             ..Default::default()
         });
+
+        #[rustfmt::skip]
+        let vertices: [f32; 18] = [
+            0.5, -0.5, 0.,   1., 0., 0.,
+            -0.5, -0.5, 0.,  0., 1., 0.,
+            0., 0.5, 0.,     0., 0., 1.,
+        ];
+        self.bindings.vertex_buffers[0] = gfx::make_buffer(&gfx::BufferDesc {
+            data: gfx::slice_as_range(&vertices),
+            ..Default::default()
+        });
+        self.pipeline = gfx::make_pipeline(&gfx::PipelineDesc {
+            shader: gfx::make_shader(&shaders::simple_shader_desc(gfx::query_backend())),
+            layout: {
+                let mut layout = gfx::VertexLayoutState::new();
+                layout.attrs[shaders::ATTR_SIMPLE_POSITION].format = gfx::VertexFormat::Float3;
+                layout.attrs[shaders::ATTR_SIMPLE_V_COLOR].format = gfx::VertexFormat::Float3;
+                layout
+            },
+            ..Default::default()
+        });
+        self.pass_action.colors[0] = gfx::ColorAttachmentAction {
+            load_action: gfx::LoadAction::Clear,
+            clear_value: gfx::Color {
+                r: 0.3,
+                g: 0.6,
+                b: 0.9,
+                a: 1.,
+            },
+            ..Default::default()
+        };
     }
 
     fn callback_event(&mut self, event: &sap::Event) {
@@ -79,7 +112,23 @@ impl GlobalState {
         }
     }
 
-    fn callback_frame(&mut self) {}
+    fn callback_frame(&mut self) {
+        call_controller(&self.simulation.state);
+        self.simulation.step();
+
+        gfx::begin_pass(&gfx::Pass {
+            action: self.pass_action,
+            swapchain: glue::swapchain(),
+            ..Default::default()
+        });
+        gfx::apply_viewport(0, 0, sap::width(), sap::height(), false);
+        gfx::apply_pipeline(self.pipeline);
+        gfx::apply_bindings(&self.bindings);
+        gfx::draw(0, 3, 1);
+
+        gfx::end_pass();
+        gfx::commit();
+    }
 }
 
 extern "C" fn ffi_cb_init(user_data: *mut c_void) {
