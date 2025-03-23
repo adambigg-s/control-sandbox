@@ -19,6 +19,8 @@
 *.dll   binary
 
 *.rs linguist-language=C
+*.rs linguist-generated=true
+src/foreign_functions.rs linguist-generated=false
 
 *.la    binary
 *.a     binary
