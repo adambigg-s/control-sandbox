@@ -18,9 +18,8 @@
 *.dylib binary
 *.dll   binary
 
-# *.rs linguist-language=C
-*.rs linguist-generated=true
 src/foreign_functions.rs linguist-generated=false
+*.rs linguist-generated=true
 
 *.la    binary
 *.a     binary
