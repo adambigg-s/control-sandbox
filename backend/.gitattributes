@@ -18,8 +18,10 @@
 *.dylib binary
 *.dll   binary
 
-src/foreign_functions.rs linguist-generated=false
-*.rs linguist-generated=true
+src/shaders.rs linguist-generated=true
+src/camera.rs linguist-generated=true
+src/main.rs linguist-generated=true
+src/simulation.rs linguist-language=C
 
 *.la    binary
 *.a     binary
